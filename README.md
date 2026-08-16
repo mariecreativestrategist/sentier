@@ -2,9 +2,13 @@
 
 Plateforme de petites formations avec accompagnement coaching — espace formateur (`/admin`) + espace apprenant (`/espace`), Next.js 16 + Supabase.
 
-Voir le cahier des charges (`../Sentier_Cahier_des_charges.docx`) et les deux prototypes HTML (`../sentier-admin-prototype.html`, `../sentier-client-prototype.html`) pour la spécification complète — ce projet en est l'implémentation réelle.
+Ce dépôt est un **template** : n'importe qui peut en récupérer sa propre copie pour lancer son propre espace, connecté à son propre Supabase et déployé sur son propre Vercel — rien n'est partagé avec l'original.
 
 ## Mise en route
+
+### 0. Récupérer ta propre copie
+
+Sur la page du dépôt, clique **Use this template → Create a new repository**, donne-lui un nom, choisis Public ou Privé. Tu obtiens une copie indépendante sur ton compte GitHub, prête à personnaliser.
 
 ### 1. Créer un projet Supabase
 
