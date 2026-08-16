@@ -1,0 +1,625 @@
+<title>Mise en route Sentier</title>
+<style>
+  @font-face {
+    font-family: "InterVar";
+    src: local("Inter");
+    font-weight: 400 800;
+  }
+
+  :root {
+    --bg: #f4f6fa;
+    --bg-soft: #eceef4;
+    --card: #ffffff;
+    --border: #e1e5ee;
+    --border-soft: #eaedf3;
+    --text-primary: #16213a;
+    --text-muted: #5b6478;
+    --text-faint: #9aa2b4;
+    --primary: #3b5bdb;
+    --primary-dim: #eaeffd;
+    --success: #0ea371;
+    --success-dim: #e3f7ef;
+    --sidebar-bg: #101b36;
+    --sidebar-bg-hover: #17264d;
+    --sidebar-text: #8d9ac0;
+    --sidebar-text-active: #8fb0ff;
+    --sidebar-border: #1e2b4d;
+    --code-bg: #101b36;
+    --code-text: #d7deee;
+    --code-comment: #6f7fa8;
+    --code-accent: #8fb0ff;
+    --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 6px rgba(16, 24, 40, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1220;
+      --bg-soft: #0f1830;
+      --card: #121b30;
+      --border: #223055;
+      --border-soft: #1b2745;
+      --text-primary: #e7ebf7;
+      --text-muted: #a0aac6;
+      --text-faint: #6b7594;
+      --primary: #7c9bff;
+      --primary-dim: #1c2a52;
+      --success: #3fd39a;
+      --success-dim: #113127;
+      --sidebar-bg: #060b17;
+      --sidebar-bg-hover: #101a30;
+      --sidebar-text: #7986ab;
+      --sidebar-text-active: #a9c1ff;
+      --sidebar-border: #182241;
+      --code-bg: #060b17;
+      --code-text: #d7deee;
+      --code-comment: #57628a;
+      --code-accent: #a9c1ff;
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 6px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0b1220;
+    --bg-soft: #0f1830;
+    --card: #121b30;
+    --border: #223055;
+    --border-soft: #1b2745;
+    --text-primary: #e7ebf7;
+    --text-muted: #a0aac6;
+    --text-faint: #6b7594;
+    --primary: #7c9bff;
+    --primary-dim: #1c2a52;
+    --success: #3fd39a;
+    --success-dim: #113127;
+    --sidebar-bg: #060b17;
+    --sidebar-bg-hover: #101a30;
+    --sidebar-text: #7986ab;
+    --sidebar-text-active: #a9c1ff;
+    --sidebar-border: #182241;
+    --code-bg: #060b17;
+    --code-text: #d7deee;
+    --code-comment: #57628a;
+    --code-accent: #a9c1ff;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 6px rgba(0, 0, 0, 0.25);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: "InterVar", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body { overflow-x: hidden; }
+
+  a { color: var(--primary); }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* -------- sidebar (echoes the product's own sidebar) -------- */
+  nav.toc {
+    width: 246px;
+    flex-shrink: 0;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 22px 14px 24px;
+  }
+
+  .toc-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 20px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--sidebar-border);
+  }
+  .toc-brand .mark {
+    width: 26px; height: 26px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .toc-brand .name { color: #fff; font-weight: 600; font-size: 14.5px; }
+  .toc-brand .tag { display: block; color: var(--sidebar-text); font-size: 11px; margin-top: 1px; }
+
+  .toc-group { margin-bottom: 18px; }
+  .toc-group-title {
+    color: var(--sidebar-text);
+    opacity: .75;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    padding: 0 10px;
+    margin-bottom: 6px;
+  }
+  .toc-group a {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6.5px 10px;
+    border-radius: 7px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .toc-group a .n {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--sidebar-text-active);
+    opacity: .85;
+    width: 14px;
+    flex-shrink: 0;
+  }
+  .toc-group a:hover { background: var(--sidebar-bg-hover); color: #fff; }
+
+  /* -------- main content -------- */
+  main {
+    flex: 1;
+    min-width: 0;
+    padding: 56px 64px 100px;
+  }
+  .content {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .kicker {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin: 0 0 10px;
+  }
+  h1.title {
+    font-size: clamp(28px, 4vw, 34px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 60ch;
+    margin: 0 0 40px;
+  }
+
+  section.part { margin-bottom: 56px; scroll-margin-top: 24px; }
+  .part-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .part-head .badge {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--primary);
+    background: var(--primary-dim);
+    padding: 2px 8px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+  .part-head h2 {
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .part-intro {
+    color: var(--text-muted);
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin: -8px 0 22px;
+    max-width: 62ch;
+  }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-soft);
+    scroll-margin-top: 24px;
+  }
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    flex-shrink: 0;
+    width: 30px; height: 30px;
+    border-radius: 999px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-top: 1px;
+  }
+
+  .step-body { min-width: 0; flex: 1; }
+  .step-body h3 {
+    font-size: 15.5px;
+    font-weight: 600;
+    margin: 3px 0 6px;
+  }
+  .step-body p {
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+  }
+  .step-body p:last-child { margin-bottom: 0; }
+  .step-body strong { color: var(--text-primary); font-weight: 600; }
+
+  .note {
+    display: flex;
+    gap: 9px;
+    background: var(--primary-dim);
+    color: var(--text-primary);
+    border-radius: 10px;
+    padding: 10px 13px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin: 10px 0;
+  }
+  .note .ico { flex-shrink: 0; }
+  .note.warn { background: var(--success-dim); }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 10px;
+    padding: 13px 15px;
+    font-size: 12.8px;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 10px 0;
+  }
+  pre .c { color: var(--code-comment); }
+  pre .a { color: var(--code-accent); }
+
+  .kv {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 5px 14px;
+    background: var(--card);
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 10px 0;
+    font-size: 13px;
+  }
+  .kv dt { font-family: "IBM Plex Mono", monospace; color: var(--text-faint); }
+  .kv dd { margin: 0; color: var(--text-primary); }
+
+  .swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--card);
+  }
+  .swatch .chip {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    border: 1px solid rgba(0,0,0,.08);
+    flex-shrink: 0;
+  }
+  .swatch .label { font-size: 12px; min-width: 0; }
+  .swatch .var { font-family: "IBM Plex Mono", monospace; color: var(--text-primary); display: block; font-size: 12px; }
+  .swatch .use { color: var(--text-faint); font-size: 11px; }
+
+  .file-tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    background: var(--bg-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 1.5px 7px;
+    color: var(--text-primary);
+  }
+
+  footer.end {
+    max-width: 700px;
+    margin: 0 auto;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-soft);
+    color: var(--text-faint);
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 860px) {
+    nav.toc { display: none; }
+    main { padding: 40px 22px 80px; }
+  }
+</style>
+
+<div class="shell">
+  <nav class="toc" aria-label="Sommaire">
+    <div class="toc-brand">
+      <span class="mark">S</span>
+      <span>
+        <span class="name">Sentier</span>
+        <span class="tag">Guide de mise en route</span>
+      </span>
+    </div>
+
+    <div class="toc-group">
+      <p class="toc-group-title">Installation</p>
+      <a href="#i1"><span class="n">01</span>GitHub</a>
+      <a href="#i2"><span class="n">02</span>Supabase</a>
+      <a href="#i3"><span class="n">03</span>Schéma SQL</a>
+      <a href="#i4"><span class="n">04</span>Test en local</a>
+      <a href="#i5"><span class="n">05</span>Déployer sur Vercel</a>
+      <a href="#i6"><span class="n">06</span>Domaine (facultatif)</a>
+    </div>
+
+    <div class="toc-group">
+      <p class="toc-group-title">Personnalisation</p>
+      <a href="#p1"><span class="n">01</span>Nom de l'espace</a>
+      <a href="#p2"><span class="n">02</span>Couleurs</a>
+      <a href="#p3"><span class="n">03</span>Logo</a>
+      <a href="#p4"><span class="n">04</span>Typographie</a>
+      <a href="#p5"><span class="n">05</span>Contenu</a>
+      <a href="#p6"><span class="n">06</span>Pour aller plus loin</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="content">
+      <p class="kicker">Sentier · sentier-app</p>
+      <h1 class="title">Mettre Sentier en ligne, puis le rendre tien</h1>
+      <p class="lede">
+        Deux parcours courts : d'abord faire tourner Sentier pour de vrai (GitHub → Supabase → Vercel),
+        puis l'adapter à ta marque — couleurs, logo, nom — sans toucher à la logique de l'app.
+      </p>
+
+      <!-- ============================================================ -->
+      <section class="part" id="installation">
+        <div class="part-head">
+          <span class="badge">Partie 1</span>
+          <h2>Installation</h2>
+        </div>
+        <p class="part-intro">
+          À la fin de cette partie, Sentier tourne sur une vraie URL, avec une vraie base de données,
+          accessible à toi et à tes apprenants.
+        </p>
+
+        <div class="step" id="i1">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Mettre le code sur GitHub</h3>
+            <p>
+              <code>create-next-app</code> a déjà initialisé un dépôt git local dans <span class="file-tag">sentier-app/</span>.
+              Crée un nouveau dépôt vide sur <a href="https://github.com/new" target="_blank" rel="noreferrer">github.com/new</a>
+              (privé, conseillé) sans README ni .gitignore — puis relie-le :
+            </p>
+            <pre><span class="c"># depuis le dossier sentier-app</span>
+git add -A
+git commit -m <span class="a">"Initial commit"</span>
+git branch -M main
+git remote add origin <span class="a">https://github.com/TON-COMPTE/sentier.git</span>
+git push -u origin main</pre>
+            <div class="note">
+              <span class="ico">💡</span>
+              <span>Vercel se branchera directement sur ce dépôt à l'étape 5 — chaque futur <code>git push</code> redéploiera automatiquement.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step" id="i2">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Créer le projet Supabase</h3>
+            <p>
+              Sur <a href="https://supabase.com" target="_blank" rel="noreferrer">supabase.com</a>, crée un compte puis un nouveau projet (gratuit).
+              Choisis un mot de passe de base de données et note-le de côté.
+            </p>
+            <p>Une fois créé, va dans <strong>Project Settings → API</strong> et garde ces trois valeurs sous la main :</p>
+            <div class="kv">
+              <dt>Project URL</dt><dd>→ <code>NEXT_PUBLIC_SUPABASE_URL</code></dd>
+              <dt>anon public</dt><dd>→ <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></dd>
+              <dt>service_role</dt><dd>→ <code>SUPABASE_SERVICE_ROLE_KEY</code> (secrète, jamais dans le navigateur)</dd>
+            </div>
+          </div>
+        </div>
+
+        <div class="step" id="i3">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Créer les tables</h3>
+            <p>
+              Dans le dashboard Supabase : <strong>SQL Editor → New query</strong>. Ouvre
+              <span class="file-tag">supabase/migrations/0001_init.sql</span>, colle tout son contenu, clique <strong>Run</strong>.
+            </p>
+            <p>
+              Ça crée toutes les tables, les règles de sécurité (un apprenant ne voit jamais les données d'un autre apprenant)
+              et le espace de stockage pour les fichiers.
+            </p>
+          </div>
+        </div>
+
+        <div class="step" id="i4">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Tester en local avec des données de démo</h3>
+            <pre><span class="c"># dans sentier-app/</span>
+cp .env.local.example .env.local
+<span class="c"># colle les 3 valeurs de l'étape 2 dans .env.local</span>
+npm install
+npm run seed
+npm run dev</pre>
+            <p>
+              <code>npm run seed</code> crée un compte formateur et 5 apprenants de démonstration avec du contenu réaliste.
+              Mot de passe pour tous : <code>sentier2026</code> — <code>coach@sentier.app</code> pour l'espace formateur.
+            </p>
+          </div>
+        </div>
+
+        <div class="step" id="i5">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Déployer sur Vercel</h3>
+            <p>
+              Sur <a href="https://vercel.com/new" target="_blank" rel="noreferrer">vercel.com/new</a>, importe le dépôt GitHub créé à l'étape 1.
+              Vercel détecte Next.js automatiquement — avant de cliquer <strong>Deploy</strong>, ouvre
+              <strong>Environment Variables</strong> et ajoute :
+            </p>
+            <div class="kv">
+              <dt>NEXT_PUBLIC_SUPABASE_URL</dt><dd>la même valeur qu'en local</dd>
+              <dt>NEXT_PUBLIC_SUPABASE_ANON_KEY</dt><dd>la même valeur qu'en local</dd>
+            </div>
+            <div class="note warn">
+              <span class="ico">🔒</span>
+              <span>Ne mets <strong>pas</strong> <code>SUPABASE_SERVICE_ROLE_KEY</code> sur Vercel — elle ne sert qu'au script de seed, exécuté depuis ta machine.</span>
+            </div>
+            <p>Clique <strong>Deploy</strong>. Sentier est en ligne sur une URL <code>*.vercel.app</code> en 1 à 2 minutes.</p>
+          </div>
+        </div>
+
+        <div class="step" id="i6">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>Domaine personnalisé (facultatif)</h3>
+            <p>
+              Dans le projet Vercel : <strong>Settings → Domains</strong>, ajoute ton propre domaine
+              (ex. <code>espace.thecreativestrategist.com</code>) et suis les instructions DNS affichées.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <section class="part" id="personnalisation">
+        <div class="part-head">
+          <span class="badge">Partie 2</span>
+          <h2>Personnalisation</h2>
+        </div>
+        <p class="part-intro">
+          Ce que tu peux changer depuis l'app (aucun code) et ce qui se change dans quelques fichiers précis du projet.
+        </p>
+
+        <div class="step" id="p1">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Nom de l'espace</h3>
+            <p>Directement dans l'app : <strong>Paramètres → Espace</strong>. Aucun code à toucher.</p>
+          </div>
+        </div>
+
+        <div class="step" id="p2">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Couleurs</h3>
+            <p>
+              Tout le système de couleurs vit dans <span class="file-tag">src/app/globals.css</span>, dans le bloc
+              <code>:root</code>. Change une valeur, toute l'app se met à jour partout où elle est utilisée.
+            </p>
+            <div class="swatch-grid">
+              <div class="swatch"><span class="chip" style="background:#3B5BDB"></span><span class="label"><span class="var">--primary</span><span class="use">boutons, liens, progression</span></span></div>
+              <div class="swatch"><span class="chip" style="background:#101B36"></span><span class="label"><span class="var">--sidebar-bg</span><span class="use">fond de la barre latérale</span></span></div>
+              <div class="swatch"><span class="chip" style="background:#0EA371"></span><span class="label"><span class="var">--success</span><span class="use">statuts validés, payés</span></span></div>
+              <div class="swatch"><span class="chip" style="background:#D64545"></span><span class="label"><span class="var">--danger</span><span class="use">alertes, échecs de paiement</span></span></div>
+              <div class="swatch"><span class="chip" style="background:#F4F6FA;border-color:#ccc"></span><span class="label"><span class="var">--bg</span><span class="use">fond général de l'app</span></span></div>
+              <div class="swatch"><span class="chip" style="background:#16213A"></span><span class="label"><span class="var">--text-primary</span><span class="use">titres, texte de lecture</span></span></div>
+            </div>
+            <div class="note">
+              <span class="ico">🎨</span>
+              <span>Pour une nouvelle marque, changer <code>--primary</code> et <code>--sidebar-bg</code> suffit à transformer l'ambiance de toute l'app.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step" id="p3">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Logo</h3>
+            <p>
+              Le rond <strong>« S »</strong> de la sidebar et de la page de connexion est du texte, pas une image —
+              remplace-le par ton logo dans <span class="file-tag">src/components/shell/app-shell.tsx</span> et
+              <span class="file-tag">src/app/login/page.tsx</span>. L'icône d'onglet se change en remplaçant
+              <span class="file-tag">src/app/favicon.ico</span>.
+            </p>
+          </div>
+        </div>
+
+        <div class="step" id="p4">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Typographie</h3>
+            <p>
+              Inter (texte courant) et IBM Plex Mono (dates, montants) sont chargées dans
+              <span class="file-tag">src/app/layout.tsx</span> via <code>next/font/google</code> — n'importe quelle police
+              Google Fonts peut les remplacer en changeant les deux imports.
+            </p>
+          </div>
+        </div>
+
+        <div class="step" id="p5">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Formations, modules, apprenants</h3>
+            <p>
+              Tout le contenu pédagogique se crée depuis l'espace formateur lui-même — aucun accès au code nécessaire
+              au quotidien : <strong>Formations → + Nouvelle formation</strong>, puis modules, chapitres, exercices et quiz
+              depuis chaque fiche.
+            </p>
+          </div>
+        </div>
+
+        <div class="step" id="p6">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>Pour aller plus loin</h3>
+            <p>
+              Pour toute modification plus structurelle (nouvel écran, nouvelle règle métier), le plus simple reste de
+              redemander à Claude Code en pointant vers ce projet — il connaît déjà la structure : schéma dans
+              <span class="file-tag">supabase/migrations/</span>, logique de chaque section dans son propre
+              <span class="file-tag">actions.ts</span>, composants partagés dans <span class="file-tag">src/components/ui/</span>.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="end">
+        Sentier — The Creative Strategist. Ce guide accompagne <span class="file-tag">sentier-app/README.md</span>, qui reste
+        la référence la plus à jour pour les variables d'environnement et les commandes.
+      </footer>
+    </div>
+  </main>
+</div>

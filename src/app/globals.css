@@ -1,26 +1,114 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Backgrounds */
+  --bg: #f4f6fa;
+  --bg-elevated: #ffffff;
+  --bg-elevated-2: #f1f3f8;
+
+  /* Borders */
+  --border: #e1e5ee;
+  --border-soft: #eaedf3;
+
+  /* Text */
+  --text-primary: #16213a;
+  --text-muted: #5b6478;
+  --text-faint: #9aa2b4;
+
+  /* Brand / primary */
+  --primary: #3b5bdb;
+  --primary-dim: #eaeffd;
+
+  /* Semantic */
+  --success: #0ea371;
+  --success-dim: #e3f7ef;
+  --danger: #d64545;
+  --danger-dim: #fceaea;
+
+  /* Sidebar (dark theme) */
+  --sidebar-bg: #101b36;
+  --sidebar-bg-hover: #17264d;
+  --sidebar-active-bg: #1d2e5c;
+  --sidebar-text: #8d9ac0;
+  --sidebar-text-hover: #ffffff;
+  --sidebar-text-active: #8fb0ff;
+  --sidebar-border: #1e2b4d;
+  --sidebar-badge-bg: #1b2b54;
+
+  /* Avatar accent colors (from prototypes: sage/gold/rose/neutral) */
+  --accent-sage: #0ea371;
+  --accent-sage-dim: #e3f7ef;
+  --accent-gold: #b8860b;
+  --accent-gold-dim: #fbf1de;
+  --accent-rose: #c2417a;
+  --accent-rose-dim: #fbe8f0;
+  --accent-neutral: #5b6478;
+  --accent-neutral-dim: #eceef3;
+
+  /* Radii */
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  /* Shadow */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 6px rgba(16, 24, 40, 0.05);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-elevated-2: var(--bg-elevated-2);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-primary: var(--primary);
+  --color-primary-dim: var(--primary-dim);
+  --color-success: var(--success);
+  --color-success-dim: var(--success-dim);
+  --color-danger: var(--danger);
+  --color-danger-dim: var(--danger-dim);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-bg-hover: var(--sidebar-bg-hover);
+  --color-sidebar-active-bg: var(--sidebar-active-bg);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-sidebar-text-hover: var(--sidebar-text-hover);
+  --color-sidebar-text-active: var(--sidebar-text-active);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-badge-bg: var(--sidebar-badge-bg);
+  --color-accent-sage: var(--accent-sage);
+  --color-accent-sage-dim: var(--accent-sage-dim);
+  --color-accent-gold: var(--accent-gold);
+  --color-accent-gold-dim: var(--accent-gold-dim);
+  --color-accent-rose: var(--accent-rose);
+  --color-accent-rose-dim: var(--accent-rose-dim);
+  --color-accent-neutral: var(--accent-neutral);
+  --color-accent-neutral-dim: var(--accent-neutral-dim);
+  --radius-card: var(--radius);
+  --radius-control: var(--radius-sm);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
+
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+.rte-editable {
+  outline: none;
+  min-height: 8rem;
+}
+.rte-editable h1 { font-size: 1.5rem; font-weight: 700; margin: 0.5rem 0; }
+.rte-editable h2 { font-size: 1.25rem; font-weight: 700; margin: 0.5rem 0; }
+.rte-editable h3 { font-size: 1.1rem; font-weight: 600; margin: 0.4rem 0; }
+.rte-editable h4 { font-size: 1rem; font-weight: 600; margin: 0.4rem 0; }
+.rte-editable p { margin: 0.4rem 0; }
