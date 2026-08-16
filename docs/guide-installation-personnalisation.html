@@ -267,6 +267,20 @@
     font-size: 15.5px;
     font-weight: 600;
     margin: 3px 0 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .done-tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 500;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--success);
+    background: var(--success-dim);
+    padding: 2px 7px;
+    border-radius: 999px;
   }
   .step-body p {
     font-size: 14.5px;
@@ -421,20 +435,13 @@
         </p>
 
         <div class="step" id="i1">
-          <div class="step-num">1</div>
+          <div class="step-num" style="background:var(--success-dim);border-color:var(--success);color:var(--success)">✓</div>
           <div class="step-body">
-            <h3>Mettre le code sur GitHub</h3>
+            <h3>Mettre le code sur GitHub <span class="done-tag">déjà fait</span></h3>
             <p>
-              <code>create-next-app</code> a déjà initialisé un dépôt git local dans <span class="file-tag">sentier-app/</span>.
-              Crée un nouveau dépôt vide sur <a href="https://github.com/new" target="_blank" rel="noreferrer">github.com/new</a>
-              (privé, conseillé) sans README ni .gitignore — puis relie-le :
+              Le code est poussé sur <a href="https://github.com/mariecreativestrategist/sentier" target="_blank" rel="noreferrer">github.com/mariecreativestrategist/sentier</a>
+              (dépôt privé). Rien à refaire ici.
             </p>
-            <pre><span class="c"># depuis le dossier sentier-app</span>
-git add -A
-git commit -m <span class="a">"Initial commit"</span>
-git branch -M main
-git remote add origin <span class="a">https://github.com/TON-COMPTE/sentier.git</span>
-git push -u origin main</pre>
             <div class="note">
               <span class="ico">💡</span>
               <span>Vercel se branchera directement sur ce dépôt à l'étape 5 — chaque futur <code>git push</code> redéploiera automatiquement.</span>
@@ -496,7 +503,8 @@ npm run dev</pre>
           <div class="step-body">
             <h3>Déployer sur Vercel</h3>
             <p>
-              Sur <a href="https://vercel.com/new" target="_blank" rel="noreferrer">vercel.com/new</a>, importe le dépôt GitHub créé à l'étape 1.
+              Sur <a href="https://vercel.com/new" target="_blank" rel="noreferrer">vercel.com/new</a>, connecte ton compte GitHub si ce
+              n'est pas déjà fait, puis importe <code>mariecreativestrategist/sentier</code>.
               Vercel détecte Next.js automatiquement — avant de cliquer <strong>Deploy</strong>, ouvre
               <strong>Environment Variables</strong> et ajoute :
             </p>
