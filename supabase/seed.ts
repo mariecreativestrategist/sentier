@@ -1,9 +1,14 @@
-// Run once against a fresh Supabase project (after applying migrations/0001_init.sql):
+// Optional, for readers comfortable with a terminal: supabase/schema.sql
+// already creates a working demo account (admin@exemple.com / client@exemple.com)
+// with minimal content — nothing here is required to get Sentier running.
+// This script adds a *richer* demo dataset (5 learners, 2 formations) on top
+// of that, useful when developing the app itself. Run once, after applying
+// schema.sql:
 //   npm run seed
-// Uses the service-role key to create demo auth users + demo content so the
-// app shows something meaningful immediately. Safe to re-run — it skips
-// auth users that already exist, but will insert duplicate content rows if
-// run twice against the same content-populated project.
+// Uses the service-role key to create demo auth users + demo content. Safe
+// to re-run — it skips auth users that already exist, but will insert
+// duplicate content rows if run twice against the same content-populated
+// project.
 
 import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";

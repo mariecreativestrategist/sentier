@@ -1,5 +1,6 @@
--- Sentier — initial schema, RLS policies, and storage bucket.
--- Run this once in the Supabase SQL editor (Project > SQL Editor > New query > paste > Run).
+-- Sentier — schéma complet + compte de démonstration, en un seul script.
+-- À coller intégralement dans Supabase (SQL Editor > New query) et exécuter (Run).
+-- Peut être relancé sans risque : tout ce qui existe déjà est simplement ignoré.
 
 -- =========================================================================
 -- Extensions
@@ -7,24 +8,24 @@
 create extension if not exists pgcrypto;
 
 -- =========================================================================
--- Enums
+-- Enums (idempotent : ignore l'erreur si le type existe déjà)
 -- =========================================================================
-create type public.user_role as enum ('coach', 'learner');
-create type public.formation_status as enum ('draft', 'live', 'full', 'paused', 'done');
-create type public.module_state as enum ('todo', 'current', 'done');
-create type public.submission_status as enum ('a_corriger', 'corrige');
-create type public.document_type as enum ('facture', 'contrat', 'autre');
-create type public.session_kind as enum ('individual', 'group');
-create type public.session_status as enum ('a_venir', 'terminee');
-create type public.post_permission as enum ('all', 'coach');
-create type public.attachment_owner as enum ('chapter', 'exercise', 'document');
-create type public.payment_status as enum ('paye', 'echec', 'en_attente');
+do $$ begin create type public.user_role as enum ('coach', 'learner'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.formation_status as enum ('draft', 'live', 'full', 'paused', 'done'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.module_state as enum ('todo', 'current', 'done'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.submission_status as enum ('a_corriger', 'corrige'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.document_type as enum ('facture', 'contrat', 'autre'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.session_kind as enum ('individual', 'group'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.session_status as enum ('a_venir', 'terminee'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.post_permission as enum ('all', 'coach'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.attachment_owner as enum ('chapter', 'exercise', 'document'); exception when duplicate_object then null; end $$;
+do $$ begin create type public.payment_status as enum ('paye', 'echec', 'en_attente'); exception when duplicate_object then null; end $$;
 
 -- =========================================================================
--- Core tables
+-- Tables
 -- =========================================================================
 
-create table public.profiles (
+create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text not null,
   full_name text not null,
@@ -33,14 +34,15 @@ create table public.profiles (
   created_at timestamptz not null default now()
 );
 
-create table public.workspace (
+create table if not exists public.workspace (
   id uuid primary key default gen_random_uuid(),
   name text not null default 'Sentier',
   updated_at timestamptz not null default now()
 );
-insert into public.workspace (name) values ('Sentier');
+insert into public.workspace (name)
+select 'Sentier' where not exists (select 1 from public.workspace);
 
-create table public.formations (
+create table if not exists public.formations (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   description text not null default '',
@@ -50,14 +52,14 @@ create table public.formations (
   updated_at timestamptz not null default now()
 );
 
-create table public.modules (
+create table if not exists public.modules (
   id uuid primary key default gen_random_uuid(),
   formation_id uuid not null references public.formations (id) on delete cascade,
   name text not null,
   position int not null default 0
 );
 
-create table public.chapters (
+create table if not exists public.chapters (
   id uuid primary key default gen_random_uuid(),
   module_id uuid not null references public.modules (id) on delete cascade,
   title text not null,
@@ -66,7 +68,7 @@ create table public.chapters (
   position int not null default 0
 );
 
-create table public.exercises (
+create table if not exists public.exercises (
   id uuid primary key default gen_random_uuid(),
   module_id uuid not null references public.modules (id) on delete cascade,
   title text not null,
@@ -74,7 +76,7 @@ create table public.exercises (
   position int not null default 0
 );
 
-create table public.exercise_submissions (
+create table if not exists public.exercise_submissions (
   id uuid primary key default gen_random_uuid(),
   exercise_id uuid not null references public.exercises (id) on delete cascade,
   learner_id uuid not null references public.profiles (id) on delete cascade,
@@ -87,14 +89,14 @@ create table public.exercise_submissions (
   unique (exercise_id, learner_id)
 );
 
-create table public.quiz_questions (
+create table if not exists public.quiz_questions (
   id uuid primary key default gen_random_uuid(),
   module_id uuid not null references public.modules (id) on delete cascade,
   text text not null,
   position int not null default 0
 );
 
-create table public.quiz_options (
+create table if not exists public.quiz_options (
   id uuid primary key default gen_random_uuid(),
   question_id uuid not null references public.quiz_questions (id) on delete cascade,
   text text not null,
@@ -102,7 +104,7 @@ create table public.quiz_options (
   position int not null default 0
 );
 
-create table public.quiz_attempts (
+create table if not exists public.quiz_attempts (
   id uuid primary key default gen_random_uuid(),
   module_id uuid not null references public.modules (id) on delete cascade,
   learner_id uuid not null references public.profiles (id) on delete cascade,
@@ -113,7 +115,7 @@ create table public.quiz_attempts (
   unique (module_id, learner_id)
 );
 
-create table public.enrollments (
+create table if not exists public.enrollments (
   id uuid primary key default gen_random_uuid(),
   learner_id uuid not null references public.profiles (id) on delete cascade,
   formation_id uuid not null references public.formations (id) on delete cascade,
@@ -123,7 +125,7 @@ create table public.enrollments (
   unique (learner_id, formation_id)
 );
 
-create table public.module_progress (
+create table if not exists public.module_progress (
   id uuid primary key default gen_random_uuid(),
   enrollment_id uuid not null references public.enrollments (id) on delete cascade,
   module_id uuid not null references public.modules (id) on delete cascade,
@@ -131,7 +133,7 @@ create table public.module_progress (
   unique (enrollment_id, module_id)
 );
 
-create table public.coaching_sessions (
+create table if not exists public.coaching_sessions (
   id uuid primary key default gen_random_uuid(),
   learner_id uuid not null references public.profiles (id) on delete cascade,
   title text not null,
@@ -143,7 +145,7 @@ create table public.coaching_sessions (
   created_at timestamptz not null default now()
 );
 
-create table public.availability_slots (
+create table if not exists public.availability_slots (
   id uuid primary key default gen_random_uuid(),
   start_at timestamptz not null,
   end_at timestamptz not null,
@@ -153,7 +155,7 @@ create table public.availability_slots (
   created_at timestamptz not null default now()
 );
 
-create table public.group_sessions (
+create table if not exists public.group_sessions (
   id uuid primary key default gen_random_uuid(),
   formation_id uuid not null references public.formations (id) on delete cascade,
   title text not null,
@@ -163,14 +165,14 @@ create table public.group_sessions (
   created_at timestamptz not null default now()
 );
 
-create table public.coach_notes (
+create table if not exists public.coach_notes (
   id uuid primary key default gen_random_uuid(),
   learner_id uuid not null references public.profiles (id) on delete cascade,
   body text not null,
   created_at timestamptz not null default now()
 );
 
-create table public.channels (
+create table if not exists public.channels (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   post_permission public.post_permission not null default 'all',
@@ -178,13 +180,13 @@ create table public.channels (
   created_at timestamptz not null default now()
 );
 
-create table public.channel_formations (
+create table if not exists public.channel_formations (
   channel_id uuid not null references public.channels (id) on delete cascade,
   formation_id uuid not null references public.formations (id) on delete cascade,
   primary key (channel_id, formation_id)
 );
 
-create table public.posts (
+create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),
   channel_id uuid not null references public.channels (id) on delete cascade,
   author_id uuid not null references public.profiles (id) on delete cascade,
@@ -192,7 +194,7 @@ create table public.posts (
   created_at timestamptz not null default now()
 );
 
-create table public.documents (
+create table if not exists public.documents (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   type public.document_type not null default 'autre',
@@ -203,9 +205,9 @@ create table public.documents (
   created_at timestamptz not null default now()
 );
 
--- Manual payment tracking (§3.10) — no Stripe/automated billing in Phase 1,
--- see the plan's "explicitly deferred" list. The coach sets status by hand.
-create table public.payments (
+-- Suivi manuel des paiements (§3.10) — pas de Stripe/facturation automatisée
+-- pour l'instant, le formateur met le statut à jour à la main.
+create table if not exists public.payments (
   id uuid primary key default gen_random_uuid(),
   learner_id uuid not null references public.profiles (id) on delete cascade,
   formation_id uuid not null references public.formations (id) on delete cascade,
@@ -215,7 +217,7 @@ create table public.payments (
   created_at timestamptz not null default now()
 );
 
-create table public.attachments (
+create table if not exists public.attachments (
   id uuid primary key default gen_random_uuid(),
   owner_type public.attachment_owner not null,
   owner_id uuid not null,
@@ -225,8 +227,8 @@ create table public.attachments (
 );
 
 -- =========================================================================
--- Auth trigger — creates a profile row whenever a Supabase auth user is created.
--- seed.ts passes role/full_name via user_metadata so this trigger assigns them correctly.
+-- Trigger : crée automatiquement une ligne "profiles" pour chaque nouveau
+-- compte Supabase Auth (le rôle/nom viennent des métadonnées du compte).
 -- =========================================================================
 create or replace function public.handle_new_user()
 returns trigger
@@ -242,17 +244,20 @@ begin
     coalesce(new.raw_user_meta_data ->> 'full_name', new.email),
     coalesce((new.raw_user_meta_data ->> 'role')::public.user_role, 'learner'),
     coalesce(new.raw_user_meta_data ->> 'avatar_color', 'neutral')
-  );
+  )
+  on conflict (id) do nothing;
   return new;
 end;
 $$;
 
+drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
 -- =========================================================================
--- Helper functions (security definer to avoid RLS recursion)
+-- Fonctions utilitaires pour les policies (security definer = pas de
+-- récursion RLS quand elles interrogent profiles/enrollments elles-mêmes)
 -- =========================================================================
 create or replace function public.is_coach()
 returns boolean
@@ -368,7 +373,8 @@ end;
 $$;
 
 -- =========================================================================
--- Row Level Security
+-- Row Level Security — chaque formateur (il n'y en a qu'un par espace) voit
+-- tout, chaque apprenant ne voit que ses propres données.
 -- =========================================================================
 alter table public.profiles enable row level security;
 alter table public.workspace enable row level security;
@@ -393,43 +399,54 @@ alter table public.documents enable row level security;
 alter table public.attachments enable row level security;
 alter table public.payments enable row level security;
 
--- profiles
+drop policy if exists "profiles_select" on public.profiles;
 create policy "profiles_select" on public.profiles for select
   using (id = auth.uid() or public.is_coach());
+drop policy if exists "profiles_update_self" on public.profiles;
 create policy "profiles_update_self" on public.profiles for update
   using (id = auth.uid() or public.is_coach());
 
--- workspace
+drop policy if exists "workspace_select" on public.workspace;
 create policy "workspace_select" on public.workspace for select using (true);
+drop policy if exists "workspace_update" on public.workspace;
 create policy "workspace_update" on public.workspace for update using (public.is_coach());
 
--- formations
+drop policy if exists "formations_select" on public.formations;
 create policy "formations_select" on public.formations for select
   using (public.is_coach() or public.is_enrolled(id));
+drop policy if exists "formations_write" on public.formations;
 create policy "formations_write" on public.formations for all
   using (public.is_coach()) with check (public.is_coach());
 
--- modules / chapters / exercises / quiz (read scoped to enrollment, write coach-only)
+drop policy if exists "modules_select" on public.modules;
 create policy "modules_select" on public.modules for select
   using (public.is_coach() or public.is_enrolled(formation_id));
+drop policy if exists "modules_write" on public.modules;
 create policy "modules_write" on public.modules for all
   using (public.is_coach()) with check (public.is_coach());
 
+drop policy if exists "chapters_select" on public.chapters;
 create policy "chapters_select" on public.chapters for select
   using (public.is_coach() or public.is_enrolled(public.formation_of_module(module_id)));
+drop policy if exists "chapters_write" on public.chapters;
 create policy "chapters_write" on public.chapters for all
   using (public.is_coach()) with check (public.is_coach());
 
+drop policy if exists "exercises_select" on public.exercises;
 create policy "exercises_select" on public.exercises for select
   using (public.is_coach() or public.is_enrolled(public.formation_of_module(module_id)));
+drop policy if exists "exercises_write" on public.exercises;
 create policy "exercises_write" on public.exercises for all
   using (public.is_coach()) with check (public.is_coach());
 
+drop policy if exists "quiz_questions_select" on public.quiz_questions;
 create policy "quiz_questions_select" on public.quiz_questions for select
   using (public.is_coach() or public.is_enrolled(public.formation_of_module(module_id)));
+drop policy if exists "quiz_questions_write" on public.quiz_questions;
 create policy "quiz_questions_write" on public.quiz_questions for all
   using (public.is_coach()) with check (public.is_coach());
 
+drop policy if exists "quiz_options_select" on public.quiz_options;
 create policy "quiz_options_select" on public.quiz_options for select
   using (
     public.is_coach()
@@ -438,101 +455,117 @@ create policy "quiz_options_select" on public.quiz_options for select
       where q.id = question_id and public.is_enrolled(public.formation_of_module(q.module_id))
     )
   );
+drop policy if exists "quiz_options_write" on public.quiz_options;
 create policy "quiz_options_write" on public.quiz_options for all
   using (public.is_coach()) with check (public.is_coach());
 
--- exercise submissions: learner owns theirs (insert + select), coach grades (update, select all)
+drop policy if exists "submissions_select" on public.exercise_submissions;
 create policy "submissions_select" on public.exercise_submissions for select
   using (learner_id = auth.uid() or public.is_coach());
+drop policy if exists "submissions_insert" on public.exercise_submissions;
 create policy "submissions_insert" on public.exercise_submissions for insert
   with check (learner_id = auth.uid() or public.is_coach());
+drop policy if exists "submissions_update" on public.exercise_submissions;
 create policy "submissions_update" on public.exercise_submissions for update
   using (public.is_coach());
 
--- quiz attempts: learner inserts/reads own, coach reads all
+drop policy if exists "quiz_attempts_select" on public.quiz_attempts;
 create policy "quiz_attempts_select" on public.quiz_attempts for select
   using (learner_id = auth.uid() or public.is_coach());
+drop policy if exists "quiz_attempts_insert" on public.quiz_attempts;
 create policy "quiz_attempts_insert" on public.quiz_attempts for insert
   with check (learner_id = auth.uid());
 
--- enrollments
+drop policy if exists "enrollments_select" on public.enrollments;
 create policy "enrollments_select" on public.enrollments for select
   using (learner_id = auth.uid() or public.is_coach());
+drop policy if exists "enrollments_write" on public.enrollments;
 create policy "enrollments_write" on public.enrollments for all
   using (public.is_coach()) with check (public.is_coach());
 
--- module_progress: learner can read/update their own (via enrollment), coach full
+drop policy if exists "module_progress_select" on public.module_progress;
 create policy "module_progress_select" on public.module_progress for select
   using (
     public.is_coach()
     or exists (select 1 from public.enrollments e where e.id = enrollment_id and e.learner_id = auth.uid())
   );
+drop policy if exists "module_progress_upsert" on public.module_progress;
 create policy "module_progress_upsert" on public.module_progress for insert
   with check (
     public.is_coach()
     or exists (select 1 from public.enrollments e where e.id = enrollment_id and e.learner_id = auth.uid())
   );
+drop policy if exists "module_progress_update" on public.module_progress;
 create policy "module_progress_update" on public.module_progress for update
   using (
     public.is_coach()
     or exists (select 1 from public.enrollments e where e.id = enrollment_id and e.learner_id = auth.uid())
   );
 
--- coaching sessions: learner sees/creates their own, coach full
+drop policy if exists "sessions_select" on public.coaching_sessions;
 create policy "sessions_select" on public.coaching_sessions for select
   using (learner_id = auth.uid() or public.is_coach());
+drop policy if exists "sessions_insert" on public.coaching_sessions;
 create policy "sessions_insert" on public.coaching_sessions for insert
   with check (learner_id = auth.uid() or public.is_coach());
+drop policy if exists "sessions_update" on public.coaching_sessions;
 create policy "sessions_update" on public.coaching_sessions for update
   using (public.is_coach());
 
--- availability slots: everyone enrolled-or-coach can read; booking is an atomic
--- UPDATE guarded by is_booked = false in both the query and this policy, which is
--- what prevents the double-booking race condition from the prototype.
+-- La réservation d'un créneau est une UPDATE atomique protégée par
+-- is_booked = false, à la fois dans la requête applicative et dans cette
+-- policy : ça élimine le risque que deux apprenants réservent le même créneau.
+drop policy if exists "slots_select" on public.availability_slots;
 create policy "slots_select" on public.availability_slots for select using (true);
+drop policy if exists "slots_write_coach" on public.availability_slots;
 create policy "slots_write_coach" on public.availability_slots for insert with check (public.is_coach());
+drop policy if exists "slots_delete_coach" on public.availability_slots;
 create policy "slots_delete_coach" on public.availability_slots for delete using (public.is_coach());
+drop policy if exists "slots_book" on public.availability_slots;
 create policy "slots_book" on public.availability_slots for update
   using (is_booked = false or public.is_coach())
   with check (public.is_coach() or booked_by = auth.uid());
 
--- group sessions: visible to enrolled learners + coach; coach writes
+drop policy if exists "group_sessions_select" on public.group_sessions;
 create policy "group_sessions_select" on public.group_sessions for select
   using (public.is_coach() or public.is_enrolled(formation_id));
+drop policy if exists "group_sessions_write" on public.group_sessions;
 create policy "group_sessions_write" on public.group_sessions for all
   using (public.is_coach()) with check (public.is_coach());
 
--- coach notes: coach-only
+drop policy if exists "coach_notes_all" on public.coach_notes;
 create policy "coach_notes_all" on public.coach_notes for all
   using (public.is_coach()) with check (public.is_coach());
 
--- channels / channel_formations: read per can_view_channel, write coach-only
+drop policy if exists "channels_select" on public.channels;
 create policy "channels_select" on public.channels for select
   using (public.can_view_channel(id));
+drop policy if exists "channels_write" on public.channels;
 create policy "channels_write" on public.channels for all
   using (public.is_coach()) with check (public.is_coach());
 
+drop policy if exists "channel_formations_select" on public.channel_formations;
 create policy "channel_formations_select" on public.channel_formations for select
   using (public.can_view_channel(channel_id));
+drop policy if exists "channel_formations_write" on public.channel_formations;
 create policy "channel_formations_write" on public.channel_formations for all
   using (public.is_coach()) with check (public.is_coach());
 
--- posts: read if channel visible; insert if channel allows posting (or coach)
+drop policy if exists "posts_select" on public.posts;
 create policy "posts_select" on public.posts for select
   using (public.can_view_channel(channel_id));
+drop policy if exists "posts_insert" on public.posts;
 create policy "posts_insert" on public.posts for insert
   with check (
     author_id = auth.uid()
     and public.can_view_channel(channel_id)
     and (
       public.is_coach()
-      or exists (
-        select 1 from public.channels c where c.id = channel_id and c.post_permission = 'all'
-      )
+      or exists (select 1 from public.channels c where c.id = channel_id and c.post_permission = 'all')
     )
   );
 
--- documents: learner reads own/formation-wide/general, coach full
+drop policy if exists "documents_select" on public.documents;
 create policy "documents_select" on public.documents for select
   using (
     public.is_coach()
@@ -540,28 +573,32 @@ create policy "documents_select" on public.documents for select
     or (formation_id is not null and public.is_enrolled(formation_id))
     or (formation_id is null and learner_id is null)
   );
+drop policy if exists "documents_write" on public.documents;
 create policy "documents_write" on public.documents for all
   using (public.is_coach()) with check (public.is_coach());
 
--- payments: learner reads own, coach full (manual status updates only — no Stripe in Phase 1)
+drop policy if exists "payments_select" on public.payments;
 create policy "payments_select" on public.payments for select
   using (learner_id = auth.uid() or public.is_coach());
+drop policy if exists "payments_write" on public.payments;
 create policy "payments_write" on public.payments for all
   using (public.is_coach()) with check (public.is_coach());
 
--- attachments: read per can_view_attachment, write coach-only
+drop policy if exists "attachments_select" on public.attachments;
 create policy "attachments_select" on public.attachments for select
   using (public.can_view_attachment(owner_type, owner_id));
+drop policy if exists "attachments_write" on public.attachments;
 create policy "attachments_write" on public.attachments for all
   using (public.is_coach()) with check (public.is_coach());
 
 -- =========================================================================
--- Storage bucket for chapter/exercise/document files
+-- Stockage des fichiers (chapitres, exercices, documents administratifs)
 -- =========================================================================
 insert into storage.buckets (id, name, public)
 values ('files', 'files', false)
 on conflict (id) do nothing;
 
+drop policy if exists "files_select" on storage.objects;
 create policy "files_select" on storage.objects for select
   using (
     bucket_id = 'files'
@@ -583,10 +620,144 @@ create policy "files_select" on storage.objects for select
       )
     )
   );
-
+drop policy if exists "files_write_coach" on storage.objects;
 create policy "files_write_coach" on storage.objects for insert
   with check (bucket_id = 'files' and public.is_coach());
+drop policy if exists "files_update_coach" on storage.objects;
 create policy "files_update_coach" on storage.objects for update
   using (bucket_id = 'files' and public.is_coach());
+drop policy if exists "files_delete_coach" on storage.objects;
 create policy "files_delete_coach" on storage.objects for delete
   using (bucket_id = 'files' and public.is_coach());
+
+-- =========================================================================
+-- Compte de démonstration (formateur + apprenant) et contenu associé.
+--
+-- ⚠️ Ce bloc écrit directement dans auth.users / auth.identities, les
+-- tables internes de Supabase Auth — leur structure exacte peut varier
+-- légèrement selon la version de ton projet. Si cette partie échoue :
+-- crée les deux comptes à la main depuis Authentication → Users → Add user
+-- (admin@exemple.com / changeme123 puis client@exemple.com / changeme123,
+-- en cochant "Auto Confirm User"), puis relance ce script en le collant
+-- une seconde fois — les tables existent déjà et seront ignorées, seul le
+-- contenu de démonstration manquant sera ajouté.
+-- =========================================================================
+do $$
+declare
+  v_coach_id uuid;
+  v_learner_id uuid;
+  v_formation_id uuid;
+  v_module1_id uuid;
+  v_module2_id uuid;
+  v_exercise_id uuid;
+  v_question_id uuid;
+  v_enrollment_id uuid;
+  v_channel_id uuid;
+begin
+  -- Compte formateur
+  if not exists (select 1 from auth.users where email = 'admin@exemple.com') then
+    v_coach_id := gen_random_uuid();
+    insert into auth.users (
+      instance_id, id, aud, role, email, encrypted_password,
+      email_confirmed_at, recovery_sent_at, last_sign_in_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+      confirmation_token, email_change, email_change_token_new, recovery_token
+    ) values (
+      '00000000-0000-0000-0000-000000000000', v_coach_id, 'authenticated', 'authenticated',
+      'admin@exemple.com', crypt('changeme123', gen_salt('bf', 10)),
+      now(), now(), now(),
+      '{"provider":"email","providers":["email"]}',
+      jsonb_build_object('full_name', 'Marie (démo)', 'role', 'coach', 'avatar_color', 'neutral'),
+      now(), now(), '', '', '', ''
+    );
+    insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+    values (
+      gen_random_uuid(), v_coach_id, v_coach_id::text,
+      jsonb_build_object('sub', v_coach_id::text, 'email', 'admin@exemple.com'),
+      'email', now(), now(), now()
+    );
+  end if;
+
+  -- Compte apprenant de démo
+  if not exists (select 1 from auth.users where email = 'client@exemple.com') then
+    v_learner_id := gen_random_uuid();
+    insert into auth.users (
+      instance_id, id, aud, role, email, encrypted_password,
+      email_confirmed_at, recovery_sent_at, last_sign_in_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+      confirmation_token, email_change, email_change_token_new, recovery_token
+    ) values (
+      '00000000-0000-0000-0000-000000000000', v_learner_id, 'authenticated', 'authenticated',
+      'client@exemple.com', crypt('changeme123', gen_salt('bf', 10)),
+      now(), now(), now(),
+      '{"provider":"email","providers":["email"]}',
+      jsonb_build_object('full_name', 'Client (démo)', 'role', 'learner', 'avatar_color', 'sage'),
+      now(), now(), '', '', '', ''
+    );
+    insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+    values (
+      gen_random_uuid(), v_learner_id, v_learner_id::text,
+      jsonb_build_object('sub', v_learner_id::text, 'email', 'client@exemple.com'),
+      'email', now(), now(), now()
+    );
+  end if;
+
+  -- Contenu de démonstration — seulement si la formation de démo n'existe pas déjà
+  if not exists (select 1 from public.formations where name = 'Formation de démonstration') then
+    select id into v_coach_id from public.profiles where email = 'admin@exemple.com';
+    select id into v_learner_id from public.profiles where email = 'client@exemple.com';
+
+    insert into public.formations (name, description, format, status)
+    values ('Formation de démonstration', 'Formation créée automatiquement pour tester Sentier.', 'Cohorte + coaching individuel', 'live')
+    returning id into v_formation_id;
+
+    insert into public.modules (formation_id, name, position) values (v_formation_id, 'Kickoff & fondations', 0) returning id into v_module1_id;
+    insert into public.modules (formation_id, name, position) values (v_formation_id, 'Mise en pratique', 1) returning id into v_module2_id;
+
+    insert into public.chapters (module_id, title, position, body_html) values
+      (v_module1_id, 'Bienvenue', 0, '<p>Bienvenue dans cette formation de démonstration.</p>'),
+      (v_module1_id, 'Les fondations', 1, '<h3>Les points clés</h3><p>Contenu du deuxième chapitre.</p>');
+
+    insert into public.exercises (module_id, title, description_html, position)
+    values (v_module1_id, 'Exercice de démonstration', '<p>Décris en quelques lignes ton objectif principal.</p>', 0)
+    returning id into v_exercise_id;
+
+    insert into public.quiz_questions (module_id, text, position)
+    values (v_module1_id, 'Quelle est la bonne pratique à retenir ?', 0)
+    returning id into v_question_id;
+    insert into public.quiz_options (question_id, text, is_correct, position) values
+      (v_question_id, 'Avancer sans cadrer les objectifs', false, 0),
+      (v_question_id, 'Clarifier l''objectif avant d''agir', true, 1),
+      (v_question_id, 'Ignorer les retours du groupe', false, 2);
+
+    insert into public.enrollments (learner_id, formation_id, progress, status)
+    values (v_learner_id, v_formation_id, 0, 'ontrack')
+    returning id into v_enrollment_id;
+
+    insert into public.coaching_sessions (learner_id, title, scheduled_at, kind, status)
+    values (v_learner_id, 'Session de bienvenue', now() + interval '3 days', 'individual', 'a_venir');
+    insert into public.coaching_sessions (learner_id, title, scheduled_at, kind, status, recording_url, transcript)
+    values (v_learner_id, 'Kickoff', now() - interval '2 days', 'individual', 'terminee',
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Notes de la session de kickoff.');
+
+    insert into public.availability_slots (start_at, end_at) values
+      (now() + interval '5 days' + interval '10 hours', now() + interval '5 days' + interval '10 hours 45 minutes'),
+      (now() + interval '6 days' + interval '14 hours', now() + interval '6 days' + interval '14 hours 45 minutes');
+
+    insert into public.group_sessions (formation_id, title, starts_at, duration_minutes)
+    values (v_formation_id, 'Live Q&A mensuel', now() + interval '7 days', 60);
+
+    insert into public.coach_notes (learner_id, body)
+    values (v_learner_id, 'Premier échange positif, bonne dynamique.');
+
+    insert into public.channels (name, post_permission, access_all) values ('Général', 'all', true) returning id into v_channel_id;
+    insert into public.posts (channel_id, author_id, body)
+    values (v_channel_id, v_coach_id, 'Bienvenue sur Sentier ! N''hésite pas à te présenter ici.');
+
+    insert into public.documents (title, type, formation_id, learner_id)
+    values ('Facture de démonstration', 'facture', v_formation_id, v_learner_id);
+
+    insert into public.payments (learner_id, formation_id, amount, due_date, status)
+    values (v_learner_id, v_formation_id, 890, current_date, 'paye');
+  end if;
+end $$;

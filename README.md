@@ -4,11 +4,13 @@ Plateforme de petites formations avec accompagnement coaching — espace formate
 
 Ce dépôt est un **template** : n'importe qui peut en récupérer sa propre copie pour lancer son propre espace, connecté à son propre Supabase et déployé sur son propre Vercel — rien n'est partagé avec l'original.
 
-## Mise en route
+📄 **Guide complet pour non-développeurs** : `docs/guide-installation.md` — explique chaque étape en détail, sans terminal.
 
-### 0. Récupérer ta propre copie
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmariecreativestrategist%2Fsentier&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY&envDescription=Cles%20Supabase%20(Project%20Settings%20-%3E%20Data%20API)&envLink=https%3A%2F%2Fgithub.com%2Fmariecreativestrategist%2Fsentier%2Fblob%2Fmaster%2Fdocs%2Fguide-installation.md&project-name=sentier&repository-name=sentier)
 
-Sur la page du dépôt, clique **Use this template → Create a new repository**, donne-lui un nom, choisis Public ou Privé. Tu obtiens une copie indépendante sur ton compte GitHub, prête à personnaliser.
+## Mise en route (résumé technique)
+
+Pour l'explication détaillée pas à pas, utilise `docs/guide-installation.md`. Résumé pour un profil développeur :
 
 ### 1. Créer un projet Supabase
 
@@ -20,27 +22,28 @@ Sur [supabase.com](https://supabase.com), crée un nouveau projet (gratuit).
 cp .env.local.example .env.local
 ```
 
-Remplis `.env.local` avec les valeurs de **Project Settings > API** de ton projet Supabase :
+Remplis `.env.local` avec les valeurs de **Project Settings > Data API** de ton projet Supabase :
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (utilisée uniquement par le script de seed, jamais exposée au navigateur)
+- `SUPABASE_SERVICE_ROLE_KEY` — secrète, utilisée côté serveur uniquement (création de comptes apprenants, script de seed). Nécessaire aussi en production (Vercel) pour que "Ajouter un apprenant" fonctionne.
 
 ### 3. Appliquer le schéma de base de données
 
-Dans le **SQL Editor** du dashboard Supabase, colle et exécute le contenu de `supabase/migrations/0001_init.sql`. Ça crée toutes les tables, les policies RLS (accès formateur vs. apprenant) et le bucket de stockage `files`.
+Dans le **SQL Editor** du dashboard Supabase, colle et exécute le contenu de `supabase/schema.sql`. Ce script (idempotent — relançable sans risque) crée toutes les tables, les policies RLS (accès formateur vs. apprenant), le bucket de stockage `files`, et un compte de démonstration prêt à l'emploi :
 
-### 4. Installer les dépendances et peupler des données de démo
+- Formateur : `admin@exemple.com`
+- Apprenant : `client@exemple.com`
+- Mot de passe pour les deux : `changeme123` (à changer depuis Paramètres après la première connexion)
+
+### 4. (Optionnel) Données de démo plus riches
 
 ```bash
 npm install
 npm run seed
 ```
 
-Le script crée un compte formateur + 5 comptes apprenants de démonstration, avec 2 formations, modules, exercices, quiz, sessions de coaching, canaux communauté, documents et paiements. Mot de passe pour tous les comptes : `sentier2026`.
-
-- Formateur : `coach@sentier.app`
-- Apprenants : `chloe@`, `yanis@`, `sofia@`, `hugo@`, `lea@sentier.app`
+Ajoute un jeu de données plus complet (5 apprenants, 2 formations) par-dessus le compte de démo créé à l'étape 3 — utile pour développer l'app elle-même, pas nécessaire pour l'utiliser.
 
 ### 5. Lancer en local
 

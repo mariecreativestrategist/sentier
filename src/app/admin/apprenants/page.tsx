@@ -5,12 +5,13 @@ import { Avatar } from "@/components/ui/avatar";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatDate } from "@/lib/format";
+import { NewLearnerForm } from "./new-learner-form";
 
 export default async function ApprenantsPage() {
   await requireProfile("coach");
   const supabase = await createClient();
 
-  const [{ data: learners }, { data: enrollments }, { data: sessions }] = await Promise.all([
+  const [{ data: learners }, { data: enrollments }, { data: sessions }, { data: formations }] = await Promise.all([
     supabase.from("profiles").select("id, full_name, email, avatar_color").eq("role", "learner").order("full_name"),
     supabase.from("enrollments").select("learner_id, progress, formations(name)"),
     supabase
@@ -19,6 +20,7 @@ export default async function ApprenantsPage() {
       .eq("status", "a_venir")
       .gte("scheduled_at", new Date().toISOString())
       .order("scheduled_at", { ascending: true }),
+    supabase.from("formations").select("id, name").order("name"),
   ]);
 
   const enrollmentByLearner = new Map((enrollments ?? []).map((e) => [e.learner_id, e]));
@@ -28,8 +30,10 @@ export default async function ApprenantsPage() {
   });
 
   return (
-    <div>
-      <h1 className="text-lg font-semibold text-text-primary mb-6">Apprenants</h1>
+    <div className="space-y-6">
+      <h1 className="text-lg font-semibold text-text-primary">Apprenants</h1>
+
+      <NewLearnerForm formations={formations ?? []} />
 
       <div className="card overflow-hidden">
         {learners && learners.length > 0 ? (
@@ -71,7 +75,7 @@ export default async function ApprenantsPage() {
             </tbody>
           </table>
         ) : (
-          <EmptyState icon="👥" title="Aucun apprenant" description="Inscris un apprenant depuis une fiche formation." />
+          <EmptyState icon="👥" title="Aucun apprenant" description="Ajoute ton premier apprenant ci-dessus." />
         )}
       </div>
     </div>
