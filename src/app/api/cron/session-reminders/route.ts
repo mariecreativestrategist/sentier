@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
     .gte("scheduled_at", now.toISOString())
     .lte("scheduled_at", in24h.toISOString());
 
+  const coachEmail = process.env.COACH_NOTIFICATION_EMAIL;
   let sent = 0;
   for (const session of sessions ?? []) {
     const learner = session.profiles as unknown as { email: string; full_name: string } | null;
@@ -40,6 +41,17 @@ export async function GET(request: NextRequest) {
         `<p>Ta session « ${session.title} » a lieu le ${formatDateTime(session.scheduled_at)}.</p>`
       ),
     });
+
+    if (coachEmail) {
+      await sendEmail({
+        to: coachEmail,
+        subject: `Rappel — session avec ${learner.full_name}`,
+        html: emailLayout(
+          "Rappel de session",
+          `<p>Ta session « ${session.title} » avec <strong>${learner.full_name}</strong> a lieu le ${formatDateTime(session.scheduled_at)}.</p>`
+        ),
+      });
+    }
 
     if (ok) {
       await supabase.from("coaching_sessions").update({ reminder_sent: true }).eq("id", session.id);
