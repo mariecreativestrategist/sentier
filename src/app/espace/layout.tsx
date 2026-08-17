@@ -23,6 +23,7 @@ export default async function EspaceLayout({ children }: LayoutProps<"/espace">)
         { href: "/espace", label: "Dashboard", icon: "🏠", exact: true },
         { href: "/espace/formation", label: "Ma formation", icon: "📚" },
         { href: "/espace/coaching", label: "Coaching", icon: "🗓️" },
+        { href: "/espace/messagerie", label: "Messagerie", icon: "💬" },
         { href: "/espace/communaute", label: "Communauté", icon: "💭" },
         { href: "/espace/documents", label: "Documents", icon: "🗂️" },
         { href: "/espace/certificat", label: "Certificat", icon: "🎓" },

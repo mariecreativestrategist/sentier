@@ -226,6 +226,27 @@ create table if not exists public.attachments (
   created_at timestamptz not null default now()
 );
 
+-- Messagerie 1:1 formateur <-> apprenant (une conversation par apprenant,
+-- un seul formateur par espace).
+create table if not exists public.conversations (
+  id uuid primary key default gen_random_uuid(),
+  learner_id uuid not null references public.profiles (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (learner_id)
+);
+
+create table if not exists public.messages (
+  id uuid primary key default gen_random_uuid(),
+  conversation_id uuid not null references public.conversations (id) on delete cascade,
+  author_id uuid not null references public.profiles (id) on delete cascade,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+-- Rappels de session : évite de renvoyer le même rappel plusieurs fois si le
+-- job cron tourne plus d'une fois avant la session.
+alter table public.coaching_sessions add column if not exists reminder_sent boolean not null default false;
+
 -- =========================================================================
 -- Trigger : crée automatiquement une ligne "profiles" pour chaque nouveau
 -- compte Supabase Auth (le rôle/nom viennent des métadonnées du compte).
@@ -398,6 +419,8 @@ alter table public.posts enable row level security;
 alter table public.documents enable row level security;
 alter table public.attachments enable row level security;
 alter table public.payments enable row level security;
+alter table public.conversations enable row level security;
+alter table public.messages enable row level security;
 
 drop policy if exists "profiles_select" on public.profiles;
 create policy "profiles_select" on public.profiles for select
@@ -591,6 +614,29 @@ drop policy if exists "attachments_write" on public.attachments;
 create policy "attachments_write" on public.attachments for all
   using (public.is_coach()) with check (public.is_coach());
 
+drop policy if exists "conversations_select" on public.conversations;
+create policy "conversations_select" on public.conversations for select
+  using (learner_id = auth.uid() or public.is_coach());
+drop policy if exists "conversations_insert" on public.conversations;
+create policy "conversations_insert" on public.conversations for insert
+  with check (learner_id = auth.uid() or public.is_coach());
+
+drop policy if exists "messages_select" on public.messages;
+create policy "messages_select" on public.messages for select
+  using (
+    public.is_coach()
+    or exists (select 1 from public.conversations c where c.id = conversation_id and c.learner_id = auth.uid())
+  );
+drop policy if exists "messages_insert" on public.messages;
+create policy "messages_insert" on public.messages for insert
+  with check (
+    author_id = auth.uid()
+    and (
+      public.is_coach()
+      or exists (select 1 from public.conversations c where c.id = conversation_id and c.learner_id = auth.uid())
+    )
+  );
+
 -- =========================================================================
 -- Stockage des fichiers (chapitres, exercices, documents administratifs)
 -- =========================================================================
@@ -653,6 +699,7 @@ declare
   v_question_id uuid;
   v_enrollment_id uuid;
   v_channel_id uuid;
+  v_conversation_id uuid;
 begin
   -- Compte formateur
   if not exists (select 1 from auth.users where email = 'admin@exemple.com') then
@@ -759,5 +806,9 @@ begin
 
     insert into public.payments (learner_id, formation_id, amount, due_date, status)
     values (v_learner_id, v_formation_id, 890, current_date, 'paye');
+
+    insert into public.conversations (learner_id) values (v_learner_id) returning id into v_conversation_id;
+    insert into public.messages (conversation_id, author_id, body)
+    values (v_conversation_id, v_coach_id, 'Bienvenue ! N''hésite pas à m''écrire ici si tu as une question.');
   end if;
 end $$;

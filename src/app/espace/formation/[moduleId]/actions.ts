@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail, emailLayout } from "@/lib/email";
 
 export async function markModuleDone(moduleId: string) {
   const profile = await requireProfile("learner");
@@ -53,6 +54,19 @@ export async function submitExercise(exerciseId: string, moduleId: string, formD
     content,
     status: "a_corriger",
   });
+
+  const coachEmail = process.env.COACH_NOTIFICATION_EMAIL;
+  if (coachEmail) {
+    const { data: exercise } = await supabase.from("exercises").select("title").eq("id", exerciseId).single();
+    await sendEmail({
+      to: coachEmail,
+      subject: `Nouvelle remise de ${profile.full_name}`,
+      html: emailLayout(
+        "Nouvelle remise à corriger",
+        `<p><strong>${profile.full_name}</strong> a soumis « ${exercise?.title ?? "un exercice"} ».</p>`
+      ),
+    });
+  }
 
   revalidatePath(`/espace/formation/${moduleId}`);
 }

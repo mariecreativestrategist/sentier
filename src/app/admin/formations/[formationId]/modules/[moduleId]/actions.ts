@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail, emailLayout } from "@/lib/email";
 
 function modulePath(formationId: string, moduleId: string) {
   return `/admin/formations/${formationId}/modules/${moduleId}`;
@@ -113,6 +114,25 @@ export async function saveCorrection(formationId: string, moduleId: string, subm
       corrected_at: new Date().toISOString(),
     })
     .eq("id", submissionId);
+
+  const { data: submission } = await supabase
+    .from("exercise_submissions")
+    .select("learner_id, exercises(title), profiles(email)")
+    .eq("id", submissionId)
+    .single();
+  const learner = submission?.profiles as unknown as { email: string } | null;
+  const exercise = submission?.exercises as unknown as { title: string } | null;
+  if (learner) {
+    await sendEmail({
+      to: learner.email,
+      subject: `Ton exercice « ${exercise?.title ?? ""} » a été corrigé`,
+      html: emailLayout(
+        "Correction disponible",
+        `<p>Ta remise pour « ${exercise?.title ?? "un exercice"} » vient d'être corrigée — va y jeter un œil dans ton espace Sentier.</p>`
+      ),
+    });
+  }
+
   revalidatePath(modulePath(formationId, moduleId));
 }
 

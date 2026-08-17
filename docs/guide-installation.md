@@ -11,9 +11,10 @@ Compte environ 20-25 minutes la première fois.
 - **Dépôt (repository)** : l'endroit où le code du site est rangé sur GitHub — un peu comme un dossier partagé.
 - **Bucket** : un espace de stockage de fichiers (PDF, images, vidéos) dans Supabase.
 
-Crée-toi un compte (gratuit) sur ce site — on le configure à l'étape 1 :
+Crée-toi un compte (gratuit) sur ces sites — on les configure au fur et à mesure :
 
 - [supabase.com](https://supabase.com)
+- [resend.com](https://resend.com) (facultatif — uniquement si tu veux que le site envoie des emails, voir Étape 3bis)
 
 Pour Vercel (étape 4), pas besoin de créer de compte à l'avance : tu pourras t'inscrire directement avec ton compte GitHub au moment de déployer.
 
@@ -60,6 +61,16 @@ Un message de succès s'affiche en bas. Ce script, en un seul passage, a créé 
 
 > ⚠️ Cette clé secrète ne se partage jamais publiquement — elle donne un accès complet à la base de données.
 
+## Étape 3bis (optionnel) — Créer une clé Resend (pour les emails)
+
+Resend permet au site d'envoyer des emails : invitation d'un nouvel apprenant, notification de message, de correction, rappel de session. **Sans cette étape, le site fonctionne à l'identique** — il n'enverra simplement aucun email (une invitation d'apprenant reste consultable directement dans l'interface, voir Étape 5).
+
+1. Va sur [resend.com](https://resend.com), connecte-toi.
+2. Menu de gauche : **API Keys → Create API Key**. Donne-lui un nom, clique **Add**.
+3. Copie la clé affichée (une seule fois) dans ton fichier texte.
+
+Sans étape supplémentaire, Resend n'autorise l'envoi qu'à l'adresse email de ton propre compte Resend — c'est suffisant pour tester. Pour envoyer de vrais emails à tes apprenants plus tard, il faudra vérifier un nom de domaine sur Resend (Domains → Add Domain, puis suivre les instructions DNS affichées).
+
 ## Étape 4 — Déployer sur Vercel (en un clic)
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmariecreativestrategist%2Fsentier&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY&envDescription=Cles%20Supabase%20(Project%20Settings%20-%3E%20Data%20API)&project-name=sentier&repository-name=sentier)
@@ -75,7 +86,15 @@ Un message de succès s'affiche en bas. Ce script, en un seul passage, a créé 
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | la clé anon public de l'étape 3 |
 | `SUPABASE_SERVICE_ROLE_KEY` | la clé service_role / secret de l'étape 3 |
 
-5. Clique **Deploy**. Une page avec un chargement animé apparaît — patiente 2-3 minutes.
+5. Si tu as fait l'Étape 3bis, clique **Add More** et ajoute aussi :
+
+| Nom de la variable | Valeur à coller |
+| --- | --- |
+| `RESEND_API_KEY` | la clé de l'Étape 3bis |
+| `RESEND_FROM_EMAIL` | `Sentier <onboarding@resend.dev>` (ou ton domaine vérifié) |
+| `COACH_NOTIFICATION_EMAIL` | ton propre email, celui utilisé pour ton compte Resend |
+
+6. Clique **Deploy**. Une page avec un chargement animé apparaît — patiente 2-3 minutes.
 
 > 💡 `SUPABASE_SERVICE_ROLE_KEY` est nécessaire sur Vercel (pas seulement en local) : c'est elle qui permet au site de créer le compte de connexion d'un apprenant quand tu cliques "+ Ajouter un apprenant".
 
@@ -91,8 +110,9 @@ Le site est maintenant entièrement réel : ce que tu vas faire ci-dessous est v
 
 Teste côté formateur :
 
-- **Apprenants → + Ajouter un apprenant** → renseigne un nom et un email → un compte de connexion est créé automatiquement, avec un mot de passe temporaire affiché **une seule fois** (note-le, ou utilise plutôt le compte de démo ci-dessous pour tester).
+- **Apprenants → + Ajouter un apprenant** → renseigne un nom et un email → un compte est créé. Si Resend est configuré, un email d'invitation part vers cette adresse ; sinon, le lien pour créer le mot de passe s'affiche directement à l'écran **une seule fois** (copie-le, ou utilise plutôt le compte de démo ci-dessous pour tester le reste).
 - **Formations** → ouvre la *Formation de démonstration* → onglet **Modules** → ouvre un module → onglet **Leçons** → ajoute un chapitre, écris du texte, ajoute un fichier — le fichier doit apparaître comme pièce jointe téléchargeable.
+- **Messagerie** → choisis l'apprenant de démo, envoie un message.
 - **Sessions coaching → Créneaux disponibles** → ouvre un créneau.
 - **Administratif** → ajoute un document.
 
@@ -100,7 +120,8 @@ Teste côté apprenant, dans un onglet privé/navigation privée :
 
 - Connecte-toi avec le compte apprenant de démo créé automatiquement par le script SQL : `client@exemple.com` / `changeme123`.
 - Va sur **Ma formation**, ouvre un module, envoie une remise d'exercice ou réponds au quiz.
-- Reviens sur l'espace formateur (fiche de l'apprenant de démo, onglet Corrections) et vérifie que la remise apparaît bien.
+- Reviens sur l'espace formateur (fiche de l'apprenant de démo, onglet Corrections), corrige la remise — si Resend est configuré, l'apprenant reçoit un email de notification.
+- Va sur **Messagerie**, réponds au message envoyé plus haut.
 - Va sur **Coaching → Réserver un créneau**, réserve le créneau ouvert plus haut.
 
 ## Étape 6 (optionnel) — Ton propre nom de domaine
@@ -118,6 +139,7 @@ Voir [PERSONNALISATION.md](./PERSONNALISATION.md) — tout se fait aussi depuis 
 
 - **Le script SQL échoue avec une erreur sur `auth.users`** : voir l'encadré à la fin de l'Étape 2.
 - **Impossible de se connecter avec `admin@exemple.com` ou `client@exemple.com`** : vérifie dans Supabase (**Table Editor → profiles**) qu'une ligne existe bien pour ce compte, et dans **Authentication → Users** que l'utilisateur apparaît.
-- **Le mot de passe temporaire d'un nouvel apprenant ne fonctionne pas** : vérifie que `SUPABASE_SERVICE_ROLE_KEY` est bien renseignée dans Vercel — c'est cette clé qui permet au serveur de créer le compte de connexion de l'apprenant au moment où le formateur l'ajoute.
+- **Impossible de créer un nouvel apprenant** : vérifie que `SUPABASE_SERVICE_ROLE_KEY` est bien renseignée dans Vercel — c'est cette clé qui permet au serveur de créer le compte de connexion de l'apprenant au moment où le formateur l'ajoute.
 - **L'upload d'un fichier échoue** (chapitre, exercice, document) : vérifie dans Supabase (**Storage**) que le bucket `files` existe bien.
+- **Les emails ne partent pas** : va sur [resend.com](https://resend.com) → **Emails**, l'historique affiche l'erreur exacte (souvent : domaine non vérifié + tentative d'envoi à une adresse autre que celle de ton compte Resend). Vérifie aussi que `RESEND_API_KEY` et `RESEND_FROM_EMAIL` sont bien renseignées dans Vercel, puis redéploie.
 - **Le site redirige vers `/login` en boucle, ou une page reste blanche** : vérifie que les 3 variables `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` et `SUPABASE_SERVICE_ROLE_KEY` sont bien renseignées dans Vercel, puis redéploie (**Deployments → ⋯ → Redeploy**).

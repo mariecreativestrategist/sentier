@@ -1,29 +1,45 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useState } from "react";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { createLearner, type CreateLearnerState } from "./actions";
 
-const initialState: CreateLearnerState = { error: null, tempPassword: null, email: null };
+const initialState: CreateLearnerState = { error: null, email: null, inviteLink: null };
 
 export function NewLearnerForm({ formations }: { formations: { id: string; name: string }[] }) {
   const [state, formAction] = useActionState<CreateLearnerState, FormData>(createLearner, initialState);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [dismissed, setDismissed] = useState(false);
 
-  if (state.tempPassword) {
+  // Reset the "success panel dismissed" flag whenever a new action result
+  // comes in, synchronously during render (React's documented pattern for
+  // resetting state on prop/value change) rather than in a useEffect.
+  const [lastState, setLastState] = useState(state);
+  if (state !== lastState) {
+    setLastState(state);
+    setDismissed(false);
+  }
+
+  if (state.email && !state.error && !dismissed) {
     return (
       <div className="card p-5">
         <p className="text-sm font-semibold text-success mb-1">Compte créé</p>
-        <p className="text-sm text-text-muted mb-3">
-          Transmets ces identifiants à ton apprenant — le mot de passe ne sera plus jamais affiché.
-        </p>
-        <div className="rounded-[var(--radius-sm)] bg-bg-elevated-2 border border-border-soft p-3 space-y-1 font-mono text-sm">
-          <p>Email : {state.email}</p>
-          <p>Mot de passe temporaire : {state.tempPassword}</p>
-        </div>
+        {state.inviteLink ? (
+          <>
+            <p className="text-sm text-text-muted mb-3">
+              L&apos;email n&apos;est pas configuré (RESEND_API_KEY) — transmets ce lien à {state.email} toi-même, il ne sera plus affiché après.
+            </p>
+            <div className="rounded-[var(--radius-sm)] bg-bg-elevated-2 border border-border-soft p-3 font-mono text-xs break-all">
+              {state.inviteLink}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-text-muted mb-1">
+            Une invitation a été envoyée par email à {state.email}.
+          </p>
+        )}
         <button
           type="button"
-          onClick={() => formRef.current?.requestSubmit()}
+          onClick={() => setDismissed(true)}
           className="text-sm text-primary font-medium mt-3"
         >
           + Ajouter un autre apprenant
@@ -33,9 +49,9 @@ export function NewLearnerForm({ formations }: { formations: { id: string; name:
   }
 
   return (
-    <details className="card p-5">
+    <details className="card p-5" open={dismissed || undefined}>
       <summary className="cursor-pointer text-sm font-medium text-primary list-none">+ Ajouter un apprenant</summary>
-      <form ref={formRef} action={formAction} className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+      <form action={formAction} className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
         <input
           name="fullName"
           required
