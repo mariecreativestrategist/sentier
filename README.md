@@ -62,7 +62,7 @@ Emails transactionnels via Resend (facultatif, voir `.env.local.example`) : invi
 
 ## Ce qui est volontairement hors périmètre pour l'instant
 
-Voir le plan de développement pour le détail — en résumé : pas de paiement Stripe automatisé, pas de génération PDF réelle du certificat, pas de visioconférence intégrée, un seul formateur par espace. L'écran Ressources du prototype n'est pas dans le cahier des charges écrit et affiche une note à ce sujet plutôt qu'une fonctionnalité complète — à cadrer si besoin.
+Voir le plan de développement pour le détail — en résumé : pas de paiement Stripe automatisé, pas de génération PDF réelle du certificat, pas de visioconférence intégrée, un seul formateur par espace.
 
 ## Stack
 

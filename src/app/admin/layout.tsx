@@ -28,7 +28,6 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         { href: "/admin/coaching", label: "Sessions coaching", icon: "🗓️" },
         { href: "/admin/messagerie", label: "Messagerie", icon: "💬" },
         { href: "/admin/communaute", label: "Communauté", icon: "💭" },
-        { href: "/admin/ressources", label: "Ressources", icon: "📁" },
       ],
     },
     {
