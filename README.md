@@ -4,7 +4,7 @@ Plateforme de petites formations avec accompagnement coaching — espace formate
 
 Ce dépôt est un **template** : n'importe qui peut en récupérer sa propre copie pour lancer son propre espace, connecté à son propre Supabase et déployé sur son propre Vercel — rien n'est partagé avec l'original.
 
-📄 **Guide complet pour non-développeurs** : `docs/guide-installation.md` — explique chaque étape en détail, sans terminal.
+📄 **Guides pour non-développeurs** : [`docs/guide-installation.md`](docs/guide-installation.md) (mettre le site en ligne), [`docs/guide-utilisation.md`](docs/guide-utilisation.md) (utiliser chaque fonctionnalité au quotidien), [`docs/PERSONNALISATION.md`](docs/PERSONNALISATION.md) (couleurs, logo, nom).
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmariecreativestrategist%2Fsentier&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY&envDescription=Cles%20Supabase%20(Project%20Settings%20-%3E%20Data%20API)&envLink=https%3A%2F%2Fgithub.com%2Fmariecreativestrategist%2Fsentier%2Fblob%2Fmaster%2Fdocs%2Fguide-installation.md&project-name=sentier&repository-name=sentier)
 

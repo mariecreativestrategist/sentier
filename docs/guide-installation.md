@@ -131,9 +131,10 @@ Si tu as un nom de domaine (acheté chez OVH, Namecheap...) :
 1. Dans Vercel : **Project → Settings → Domains** → tape ton adresse souhaitée → **Add**.
 2. Suis les instructions DNS affichées (à ajouter chez ton fournisseur de domaine).
 
-## Personnaliser le site (nom, logo, couleurs)
+## Et ensuite ?
 
-Voir [PERSONNALISATION.md](./PERSONNALISATION.md) — tout se fait aussi depuis le navigateur, sans rien installer localement (directement depuis GitHub en éditant les fichiers en ligne, ou depuis l'app elle-même).
+- Comment utiliser chaque fonctionnalité au quotidien (formations, apprenants, coaching, messagerie...) : voir [guide-utilisation.md](./guide-utilisation.md).
+- Personnaliser le site (nom, logo, couleurs) : voir [PERSONNALISATION.md](./PERSONNALISATION.md) — tout se fait aussi depuis le navigateur, sans rien installer localement (directement depuis GitHub en éditant les fichiers en ligne, ou depuis l'app elle-même).
 
 ## En cas de blocage
 
